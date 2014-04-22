@@ -1,0 +1,20 @@
+.PHONY: all build<%= (@bin) ? " run" : "" %><%= (@test) ? " test" : "" %> clean
+
+all: build
+	
+build:
+	mkdir -p build && cd build && cmake .. && make
+
+<% if @bin %>
+run:
+	build/<%= @project %>
+
+<% end %>
+<% if @test %>
+test:
+	build/<%= @project %>_test
+
+<% end %>
+clean:
+	rm -rf build
+

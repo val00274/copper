@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+
+require 'copper'
+require 'thor'
+
+class CLI < Thor
+  include Thor::Actions
+
+  desc "init", ""
+  method_option :bin, type: :boolean, default: false, aliases: "-b", banner: "Generate a binary for your library."
+  method_option :test, type: :boolean, default: false, aliases: "-t", banner: "Generate a Google Test for your library."
+  method_option :std, type: :string, default: "c++11", banner: "Set compile option '-std='."
+  method_option :extension, type: :string, default: "hh,cc", banner: "Set header and source extensions."
+  method_option :compiler, type: :string, default: "clang++", banner: "Set compiler name."
+  def init(project)
+    @project = project
+
+    @bin, @test, @std, @compiler = options.values_at(:bin, :test, :std, :compiler)
+    @header_ext, @source_ext = options[:extension].split(",")
+
+    template "templates/CMakeLists.txt.tt", "#{@project}/CMakeLists.txt"
+    template "templates/Makefile.tt", "#{@project}/Makefile"
+
+    empty_directory("#{@project}/include")
+    template "templates/include/newproj/newproj.hh.tt", "#{@project}/include/#{@project}/#{@project}.#{@header_ext}"
+
+    empty_directory("#{@project}/src")
+    template "templates/src/newproj/newproj.cc.tt", "#{@project}/src/#{@project}/#{@project}.#{@source_ext}"
+
+    if @bin
+      empty_directory("#{@project}/main")
+      template "templates/main/main.cc.tt", "#{@project}/main/main.#{@source_ext}"
+    end
+    if @test
+      empty_directory("#{@project}/test")
+      template "templates/test/main.cc.tt", "#{@project}/test/main.#{@source_ext}"
+    end
+  end
+
+  def self.source_root
+    File.join(File.dirname(__FILE__), "..")
+  end
+end
+
+CLI.start
